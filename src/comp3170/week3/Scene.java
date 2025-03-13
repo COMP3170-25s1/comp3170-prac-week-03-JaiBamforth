@@ -1,6 +1,7 @@
 package comp3170.week3;
 
 import static org.lwjgl.opengl.GL11.GL_FILL;
+
 import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
@@ -10,12 +11,14 @@ import static org.lwjgl.opengl.GL11.glPolygonMode;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import comp3170.GLBuffers;
 import comp3170.Shader;
 import comp3170.ShaderLibrary;
+import static comp3170.Math.TAU;
 
 public class Scene {
 
@@ -30,6 +33,11 @@ public class Scene {
 	private int colourBuffer;
 
 	private Shader shader;
+	
+	private Matrix4f modelMatrix = new Matrix4f();
+	private Matrix4f transMatrix = new Matrix4f();
+	private Matrix4f rotMatrix = new Matrix4f();
+	private Matrix4f scalMatrix = new Matrix4f();
 
 	public Scene() {
 
@@ -77,14 +85,23 @@ public class Scene {
 			// @formatter:on
 
 		indexBuffer = GLBuffers.createIndexBuffer(indices);
-
+		Vector2f offset = new Vector2f(0.0f, 0.5f);
+		float rotation = TAU/3;
+		Vector2f scale = new Vector2f(0.1f, 0.1f);
+		translationMatrix(offset, transMatrix);
+		rotationMatrix(rotation, rotMatrix);
+		scaleMatrix(scale, scalMatrix);
+		
+		modelMatrix.mul(transMatrix).mul(rotMatrix).mul(scalMatrix);
+		
 	}
 
 	public void draw() {
-		
 		shader.enable();
+		
 		// set the attributes
 		shader.setAttribute("a_position", vertexBuffer);
+		shader.setUniform("u_modelMatrix", modelMatrix);
 		shader.setAttribute("a_colour", colourBuffer);
 
 		// draw using index buffer
@@ -105,7 +122,7 @@ public class Scene {
 	 * @return
 	 */
 
-	public static Matrix4f translationMatrix(float tx, float ty, Matrix4f dest) {
+	public static Matrix4f translationMatrix(Vector2f vec, Matrix4f dest) {
 		// clear the matrix to the identity matrix
 		dest.identity();
 
@@ -117,8 +134,8 @@ public class Scene {
 		// Perform operations on only the x and y values of the T vec. 
 		// Leaves the z value alone, as we are only doing 2D transformations.
 		
-		dest.m30(tx);
-		dest.m31(ty);
+		dest.m30(vec.x);
+		dest.m31(vec.y);
 
 		return dest;
 	}
@@ -135,7 +152,13 @@ public class Scene {
 	public static Matrix4f rotationMatrix(float angle, Matrix4f dest) {
 
 		// TODO: Your code here
-
+		
+		float s = (float) Math.sin(angle);
+		float c = (float) Math.cos(angle);
+		dest.m00(c);
+		dest.m01(s);
+		dest.m10(-s);
+		dest.m11(c);
 		return dest;
 	}
 
@@ -149,10 +172,12 @@ public class Scene {
 	 * @return
 	 */
 
-	public static Matrix4f scaleMatrix(float sx, float sy, Matrix4f dest) {
+	public static Matrix4f scaleMatrix(Vector2f s, Matrix4f dest) {
 
 		// TODO: Your code here
-
+		
+		dest.m00(s.x);
+		dest.m11(s.y);
 		return dest;
 	}
 
