@@ -38,6 +38,11 @@ public class Scene {
 	private Matrix4f transMatrix = new Matrix4f();
 	private Matrix4f rotMatrix = new Matrix4f();
 	private Matrix4f scalMatrix = new Matrix4f();
+	
+	final private Vector2f offset = new Vector2f(0.0f, 0.1f);
+	private float movement_speed = 10.0f;
+	final private float rotation_rate = TAU/3;
+	final private Vector2f scale = new Vector2f(0.1f, 0.1f);
 
 	public Scene() {
 
@@ -85,17 +90,21 @@ public class Scene {
 			// @formatter:on
 
 		indexBuffer = GLBuffers.createIndexBuffer(indices);
-		Vector2f offset = new Vector2f(0.0f, 0.5f);
-		float rotation = TAU/3;
-		Vector2f scale = new Vector2f(0.1f, 0.1f);
-		translationMatrix(offset, transMatrix);
-		rotationMatrix(rotation, rotMatrix);
 		scaleMatrix(scale, scalMatrix);
-		
-		modelMatrix.mul(transMatrix).mul(rotMatrix).mul(scalMatrix);
-		
+		modelMatrix.mul(rotMatrix).mul(scalMatrix);
 	}
 
+	public void update(float deltaTime) {
+		float movement = (movement_speed * deltaTime);
+		float rotation = rotation_rate * deltaTime;
+		//Vector2f scale = scale_rate * deltaTime;
+		translationMatrix(offset, transMatrix);
+		rotationMatrix(rotation, rotMatrix);
+		//scaleMatrix(scale, scalMatrix);
+		
+		modelMatrix.mul(transMatrix).mul(rotMatrix);
+	}
+	
 	public void draw() {
 		shader.enable();
 		
@@ -109,8 +118,11 @@ public class Scene {
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
-
+		
+		
 	}
+	
+	
 
 	/**
 	 * Set the destination matrix to a translation matrix. Note the destination
